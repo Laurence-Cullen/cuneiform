@@ -13,15 +13,25 @@ def parse_atf(path):
     """
 
     object_id = ''
-    translit_line_regex = r'^([0-9]{1,2}\.[a-z]?[0-9]?[A-Z]?\.? )'
+    translit_line_regex = r'^([0-9]{1,2}\`?\.[a-z]?[0-9]?[A-Z]?\.? )'
 
     line_markers = {
         'id': '&P',
         'translation': '#tr.en: '
     }
 
+
+    counter = 0
+
+    transliterations = []
+
     with open(path) as file:
         for line in file:
+            counter += 1
+
+            if counter % 10000 == 0:
+                print("Processing line:", counter)
+
             # line = line.rstrip('\n')
 
             # match ID lines and store the most recent object ID found when
@@ -34,15 +44,20 @@ def parse_atf(path):
             # than the transliteration itself and add the transliteration to
             # data frame
             if re.match(translit_line_regex, line):
-                line_start = re.search(translit_line_regex, line).group()[0]
+                line_start = re.search(translit_line_regex, line).group()
                 translit = line.lstrip(line_start)
+                translit = translit.rstrip(' \n')
+                transliterations.append({'translit': translit, 'id': object_id})
 
-    return ''
+                # transliterations.append({'translit': translit, 'id': object_id}, ignore_index=True)
+
+    return pd.DataFrame(transliterations)
 
 
 def main():
     # catalogue = pd.read_csv('data/cdli_catalogue.csv', error_bad_lines=False)
-    trans_lit = parse_atf('data/cdliatf_unblocked.atf')
+    transliterations = parse_atf('data/cdliatf_unblocked.atf')
+    print(transliterations)
 
 
 if __name__ == '__main__':
