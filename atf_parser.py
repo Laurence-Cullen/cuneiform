@@ -101,7 +101,11 @@ def annotate_with_catalogue_data(catalogue, transliterations):
 
             object_id = row_object_id
 
-            cat_row = catalogue.loc[catalogue['id'] == getattr(row, 'id')]
+            try:
+                cat_row = catalogue.loc[catalogue['id'] == getattr(row, 'id')].iloc[0]
+            # catching what appears to be a missing id problem
+            except IndexError:
+                continue
 
         annotated_transliterations.append({
             'id': row_object_id,

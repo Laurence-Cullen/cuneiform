@@ -13,9 +13,9 @@ def main():
     transliterations = atf_parser.annotate_with_catalogue_data(catalogue, transliterations)
 
     transliterations.to_pickle('transliterations_raw.pickle')
+    # transliterations.to_csv('transliterations_raw.csv')
 
 
-    #
     # print(transliterations)
     #
     # word_count = 0
