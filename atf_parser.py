@@ -14,16 +14,20 @@ def parse_atf(path):
 
     object_id = ''
     translit_line_regex = r'^([0-9]{1,2}\`?\.[a-z]?[0-9]?[A-Z]?\.? )'
+    translation_line_regex = r'^(#tr.[a-zA-Z]*: )'
 
     line_markers = {
         'id': '&P',
         'translation': '#tr.en: '
     }
 
+    connective_characters = ['~', 'x', '?', '#', '@', '.', 'bx', '|', '(', ')']
+
+    characters_to_strip = ['(', ')', '?', ',', '#', '|']
 
     counter = 0
-
     transliterations = []
+    translations = []
 
     with open(path) as file:
         for line in file:
@@ -49,15 +53,34 @@ def parse_atf(path):
                 translit = translit.rstrip(' \n')
                 transliterations.append({'translit': translit, 'id': object_id})
 
-                # transliterations.append({'translit': translit, 'id': object_id}, ignore_index=True)
+            if re.match(translation_line_regex, line):
+                line_start = re.search(translation_line_regex, line).group()
+                translate = line.lstrip(line_start)
+                translate = translate.rstrip(' \n')
+                translations.append({'translation': translate, 'id': object_id})
 
-    return pd.DataFrame(transliterations)
+    return pd.DataFrame(transliterations), pd.DataFrame(translations)
 
 
 def main():
     # catalogue = pd.read_csv('data/cdli_catalogue.csv', error_bad_lines=False)
-    transliterations = parse_atf('data/cdliatf_unblocked.atf')
-    print(transliterations)
+    transliterations, translations = parse_atf('data/cdliatf_unblocked.atf')
+    print(translations)
+    transliterations.to_csv('transliterations_raw.csv', index=False)
+
+    word_count = 0
+
+    all_words = set()
+
+    for string in translations['translation'].values:
+        words = string.split(' ')
+        word_count += len(words)
+
+        for word in words:
+            all_words.add(word.strip(['(', ')', ',', '.']))
+
+    print('number of english translated:', word_count)
+    print('unique english words', len(all_words))
 
 
 if __name__ == '__main__':
