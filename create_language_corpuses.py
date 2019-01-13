@@ -1,39 +1,38 @@
 import pandas as pd
 
 
+save_folder = 'raw_corpuses/'
+
+
 def main():
-    corpus = pd.read_pickle('transliterations_raw.pickle')
+    omni_corpus = pd.read_pickle('transliterations_raw.pickle')
 
-    # cat_row = catalogue.loc[catalogue['id'] == getattr(row, 'id')]
+    sumerian_corpus = omni_corpus[omni_corpus['language'].str.contains('Sumerian', na=False)]
+    akkadian_corpus = omni_corpus[omni_corpus['language'].str.contains('Akkadian', na=False)]
+    hittite_corpus = omni_corpus[omni_corpus['language'].str.contains('Hittite', na=False)]
 
-    print(corpus['language'].values)
+    corpuses = {
+        # 'omni_raw_corpus.txt': omni_corpus,
+        'sumerian_raw_corpus.txt': sumerian_corpus,
+        'akkadian_raw_corpus.txt': akkadian_corpus,
+        'hittite_raw_corpus.txt': hittite_corpus
+    }
 
-    sumerian_corpus = corpus[corpus['language'].str.contains('Sumerian', na=False)]
-    akkadian_corpus = corpus[corpus['language'].str.contains('Akkadian', na=False)]
-    hittite_corpus = corpus[corpus['language'].str.contains('Hittite', na=False)]
+    for file_name, corpus in corpuses.items():
 
-    # corpuses = [sumerian_corpus, akkadian_corpus, hittite_corpus]
+        with open(save_folder + file_name, mode='w') as file:
 
-    print(sumerian_corpus)
+            for row in corpus.itertuples():
+                file.write(getattr(row, 'translit') + '\n')
 
-    with open('raw_corpuses/sumerian_raw_corpus.txt', mode='w') as file:
+    # TODO figure out WTF is going on, why can't I concatenate the files?
+    # with open(save_folder + 'proper_omni_corpus.txt', mode='w') as omni_file:
+    #     for file_name, _ in corpuses.items():
+    #
+    #         with open(save_folder + file_name, mode='r') as file:
+    #             omni_file.write(file.read())
 
-        for row in sumerian_corpus.itertuples():
-            file.write(getattr(row, 'translit') + '\n')
-
-    print(akkadian_corpus)
-
-    with open('raw_corpuses/akkadian_raw_corpus.txt', mode='w') as file:
-
-        for row in akkadian_corpus.itertuples():
-            file.write(getattr(row, 'translit') + '\n')
-
-    print(hittite_corpus)
-
-    with open('raw_corpuses/hittite_raw_corpus.txt', mode='w') as file:
-
-        for row in hittite_corpus.itertuples():
-            file.write(getattr(row, 'translit') + '\n')
+    # TODO create transliteration, translation pairs
 
 
 if __name__ == '__main__':
