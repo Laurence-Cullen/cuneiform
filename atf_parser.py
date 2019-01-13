@@ -1,8 +1,14 @@
-import pandas as pd
+import contextlib
 import re
 
+import pandas as pd
 
-def parse_atf(path):
+translit_line_regex = r'^([0-9]{1,2}\`?\.[a-z]?[0-9]?[A-Z]?\.? )'
+translation_line_regex = r'^(#tr.[a-zA-Z]*: )'
+strip_non_alphanum_regex = r'[^a-zA-Z0-9\ ]'
+
+
+def parse_atf_file(path):
     """
     Parse atf file at provided location into dataframe of transliterated line
     fragments with metadata such as the id of the object it is taken from and
@@ -13,16 +19,13 @@ def parse_atf(path):
     """
 
     object_id = ''
-    translit_line_regex = r'^([0-9]{1,2}\`?\.[a-z]?[0-9]?[A-Z]?\.? )'
-    translation_line_regex = r'^(#tr.[a-zA-Z]*: )'
 
     line_markers = {
         'id': '&P',
         'translation': '#tr.en: '
     }
 
-    connective_characters = ['~', 'x', '?', '#', '@', '.', 'bx', '|', '(', ')']
-
+    connective_characters = ['~', 'x', '?', '@', '.', 'bx']
     characters_to_strip = ['(', ')', '?', ',', '#', '|']
 
     counter = 0
@@ -30,7 +33,14 @@ def parse_atf(path):
     translations = []
 
     with open(path) as file:
+        lines = []
+
         for line in file:
+            lines.append(line)
+
+        for i in range(len(lines)):
+            line = lines[i]
+
             counter += 1
 
             if counter % 10000 == 0:
@@ -42,47 +52,74 @@ def parse_atf(path):
             # iterating through lines
             if line.startswith(line_markers['id']):
                 fragments = line.split(' = ')
-                object_id = fragments[0].lstrip(line_markers['id'])
+
+                with contextlib.suppress(ValueError):
+                    object_id = int(fragments[0].lstrip(line_markers['id']))
 
             # search for transliteration lines, if found strip everything other
             # than the transliteration itself and add the transliteration to
-            # data frame
+            # respective data frame
             if re.match(translit_line_regex, line):
                 line_start = re.search(translit_line_regex, line).group()
                 translit = line.lstrip(line_start)
                 translit = translit.rstrip(' \n')
-                transliterations.append({'translit': translit, 'id': object_id})
 
-            if re.match(translation_line_regex, line):
-                line_start = re.search(translation_line_regex, line).group()
-                translate = line.lstrip(line_start)
-                translate = translate.rstrip(' \n')
-                translations.append({'translation': translate, 'id': object_id})
+                next_line = lines[i + 1]
+
+                # Look one line ahead from transliteration to see if a translation for it exists
+                if re.match(translation_line_regex, next_line):
+                    line_start = re.search(translation_line_regex, next_line).group()
+                    translation = next_line.lstrip(line_start)
+                    translation = translation.rstrip(' \n')
+                    translations.append({'translation': translation, 'id': object_id})
+
+                    transliterations.append({'translit': translit, 'id': object_id, 'translation': translation})
+
+                else:
+                    transliterations.append({'translit': translit, 'id': object_id})
 
     return pd.DataFrame(transliterations), pd.DataFrame(translations)
 
 
-def main():
-    # catalogue = pd.read_csv('data/cdli_catalogue.csv', error_bad_lines=False)
-    transliterations, translations = parse_atf('data/cdliatf_unblocked.atf')
-    print(translations)
-    transliterations.to_csv('transliterations_raw.csv', index=False)
+def annotate_with_catalogue_data(catalogue, transliterations):
 
-    word_count = 0
+    annotated_transliterations = []
+    object_id = 1
 
-    all_words = set()
+    cat_row = catalogue.loc[catalogue['id'] == object_id]
 
-    for string in translations['translation'].values:
-        words = string.split(' ')
-        word_count += len(words)
+    for row in transliterations.itertuples():
 
-        for word in words:
-            all_words.add(word.strip(['(', ')', ',', '.']))
+        # print('row id type:', type(getattr(row, 'id')))
+        # print('row id value:', getattr(row, 'id'))
 
-    print('number of english translated:', word_count)
-    print('unique english words', len(all_words))
+        row_object_id = getattr(row, 'id')
 
+        if object_id != row_object_id:
 
-if __name__ == '__main__':
-    main()
+            print(object_id)
 
+            object_id = row_object_id
+
+            cat_row = catalogue.loc[catalogue['id'] == getattr(row, 'id')]
+
+        annotated_transliterations.append({
+            'id': row_object_id,
+            'translation': getattr(row, 'translation'),
+            'translit': getattr(row, 'translit'),
+            'language': cat_row['language'],
+            # 'collection': cat_row['collection'],
+            # 'genre': cat_row['genre'],
+            # 'subgenre': cat_row['subgenre'],
+            # 'height': cat_row['height'],
+            # 'thickness': cat_row['thickness'],
+            # 'width': cat_row['width'],
+            # 'material': cat_row['material'],
+            # 'object_type': cat_row['object_type'],
+            # 'period': cat_row['period'],
+            # 'provenience': cat_row['provenience']
+        })
+
+    print('finished annotating with catalogue data')
+
+    return pd.DataFrame(annotated_transliterations)
