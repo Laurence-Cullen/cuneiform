@@ -64,18 +64,28 @@ def parse_atf_file(path):
                 translit = line.lstrip(line_start)
                 translit = translit.rstrip(' \n')
 
-                next_line = lines[i + 1]
+                # default state is no translation being found
+                translation = None
 
-                # Look one line ahead from transliteration to see if a translation for it exists
-                if re.match(translation_line_regex, next_line):
-                    line_start = re.search(translation_line_regex, next_line).group()
-                    translation = next_line.lstrip(line_start)
-                    translation = translation.rstrip(' \n')
-                    translations.append({'translation': translation, 'id': object_id})
+                for look_ahead in range(1, 20):
 
-                    transliterations.append({'translit': translit, 'id': object_id, 'translation': translation})
+                    next_line = lines[i + look_ahead]
 
-                else:
+                    # Look ahead from transliteration to see if an english translation for it exists
+                    if re.match(translation_line_regex, next_line):
+
+                        line_start = re.search(translation_line_regex, next_line).group()
+
+                        if line_start == '#tr.en: ':
+                            translation = next_line.lstrip(line_start)
+                            translation = translation.rstrip(' \n')
+                            translations.append({'translation': translation, 'id': object_id})
+
+                            transliterations.append({'translit': translit, 'id': object_id, 'translation': translation})
+
+                            break
+
+                if translation is None:
                     transliterations.append({'translit': translit, 'id': object_id})
 
     return pd.DataFrame(transliterations), pd.DataFrame(translations)
