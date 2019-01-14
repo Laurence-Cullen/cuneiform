@@ -1,4 +1,4 @@
-# README
+# Neural Machine Translation of Cuneiform
 
 Inspired by the Ashurbanipal exhibition at the British Museum and a book on [cuneiform](https://en.wikipedia.org/wiki/Cuneiform) writing from my excellent friend [Ellie Winter](https://eleanorwinter.com). I found that pretty much all the Cuneiform ever transliterated and translated is stored in a single digital library initiative. Some ~80,000 lines of cuneiform have been translated leaving almost 1.7 million lines for which no english translations have been generated. 
 
