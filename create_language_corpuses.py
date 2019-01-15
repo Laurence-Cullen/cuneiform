@@ -44,17 +44,31 @@ def main():
 
     output_dir = 'language_pairs/'
 
+
+    dead_translations = ['(subscript)', 'xxx', 'Basket-of-tablets:', ';']
+
+
     for language_name, corpus in translation_pairs.items():
         translit_file = open(output_dir + language_name + '.txt', mode='w')
         translated_file = open(output_dir + 'translated_' + language_name + '.txt', mode='w')
 
         for row in corpus.itertuples():
-            if isinstance(getattr(row, 'translation'), str):
+            translation = getattr(row, 'translation')
+
+            if isinstance(translation, str) and str(translation) not in dead_translations and len(str(translation)) != 0:
                 translit_file.write(getattr(row, 'translit') + '\n')
                 translated_file.write(str(getattr(row, 'translation')) + '\n')
 
         translit_file.close()
         translated_file.close()
+
+    for language_name, corpus in translation_pairs.items():
+        tmx_file = open(output_dir + language_name + '.tsv', mode='w')
+
+        for row in corpus.itertuples():
+            translation = getattr(row, 'translation')
+            if isinstance(translation, str) and str(translation) not in dead_translations and len(str(translation)) != 0:
+                tmx_file.write(getattr(row, 'translit') + '\t' + getattr(row, 'translation') + '\n')
 
 
 if __name__ == '__main__':
