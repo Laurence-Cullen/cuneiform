@@ -15,5 +15,5 @@ I am looking to build a powerful NMT system to shine a light on the vast piles o
 * Built single language plain text corpuses of [Akkadian](https://en.wikipedia.org/wiki/Akkadian_language), [Sumerian](https://en.wikipedia.org/wiki/Sumerian_language) and [Hittite](https://en.wikipedia.org/wiki/Hittite_language) transliterations
 * Used [Sentence Piece](https://github.com/google/sentencepiece) by Google for unsupervised text tokenising of different languages
 * Explored [Open-NMT](http://opennmt.net/) and trained a demo English to German translation model
-* Find out what was happening to the ~30,000 lines of translated text that disapears when only lines following transliterations are saved, need to sift through translations in multiple languages to pull out english ones
+* Found out what was happening to the ~30,000 lines of translated text that disapears when only lines following transliterations are saved, need to sift through translations in multiple languages to pull out english ones
 * Created matched transliteration, translation file pairs
