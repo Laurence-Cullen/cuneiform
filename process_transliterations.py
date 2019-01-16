@@ -15,7 +15,6 @@ def main():
     transliterations.to_pickle('transliterations_raw.pickle')
     # transliterations.to_csv('transliterations_raw.csv')
 
-
     # print(transliterations)
     #
     # word_count = 0
