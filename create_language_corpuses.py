@@ -12,7 +12,7 @@ def save_monolingual_corpuses(corpuses):
         for row in corpus.itertuples():
             transliterations.append(getattr(row, 'translit'))
 
-        file_content = '\n'.join(transliterations[::-1])
+        file_content = '\n'.join(transliterations)
 
         file = open(monolingual_folder + file_name, mode='w')
         print(file_content, flush=True, file=file)
@@ -41,9 +41,8 @@ def main():
     hittite_corpus = omni_corpus[omni_corpus['language'].str.contains('Hittite', na=False)]
     undetermined_corpus = omni_corpus[omni_corpus['language'].isnull()]
 
-    # omni_corpus['language'].str.contains('undetermined', na=False) |
-
     corpuses = {
+        'omni.txt': omni_corpus,
         'sumerian.txt': sumerian_corpus,
         'akkadian.txt': akkadian_corpus,
         'hittite.txt': hittite_corpus,
