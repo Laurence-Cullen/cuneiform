@@ -25,9 +25,6 @@ def parse_atf_file(path):
         'translation': '#tr.en: '
     }
 
-    connective_characters = ['~', 'x', '?', '@', '.', 'bx']
-    characters_to_strip = ['(', ')', '?', ',', '#', '|']
-
     counter = 0
     transliterations = []
     translations = []
