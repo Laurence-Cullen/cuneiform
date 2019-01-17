@@ -4,7 +4,7 @@ monolingual_folder = 'monolingual_corpuses/'
 language_pairs_folder = 'language_pairs/'
 
 
-def save_monolingual_corpuses(corpuses):
+def save_monolingual_corpuses(corpuses, sep='\n'):
     for file_name, corpus in corpuses.items():
 
         transliterations = []
@@ -12,7 +12,7 @@ def save_monolingual_corpuses(corpuses):
         for row in corpus.itertuples():
             transliterations.append(getattr(row, 'translit'))
 
-        file_content = '\n'.join(transliterations)
+        file_content = sep.join(transliterations)
 
         file = open(monolingual_folder + file_name, mode='w')
         print(file_content, flush=True, file=file)
@@ -41,7 +41,7 @@ def main():
     hittite_corpus = omni_corpus[omni_corpus['language'].str.contains('Hittite', na=False)]
     undetermined_corpus = omni_corpus[omni_corpus['language'].isnull()]
 
-    corpuses = {
+    newline_separated_corpuses = {
         'omni.txt': omni_corpus,
         'sumerian.txt': sumerian_corpus,
         'akkadian.txt': akkadian_corpus,
@@ -49,7 +49,7 @@ def main():
         'undetermined.txt': undetermined_corpus
     }
 
-    save_monolingual_corpuses(corpuses)
+    save_monolingual_corpuses(newline_separated_corpuses)
 
     translation_pairs = {
         'sumerian': sumerian_corpus,

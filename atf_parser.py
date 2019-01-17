@@ -97,9 +97,6 @@ def annotate_with_catalogue_data(catalogue, transliterations):
 
     for row in transliterations.itertuples():
 
-        # print('row id type:', type(getattr(row, 'id')))
-        # print('row id value:', getattr(row, 'id'))
-
         row_object_id = getattr(row, 'id')
 
         if object_id != row_object_id:
@@ -114,10 +111,19 @@ def annotate_with_catalogue_data(catalogue, transliterations):
             except IndexError:
                 continue
 
+        translation = getattr(row, 'translation')
+        translit = getattr(row, 'translit')
+
+        with contextlib.suppress(AttributeError):
+            translation = translation.lower()
+
+        with contextlib.suppress(AttributeError):
+            translit = translit.lower()
+
         annotated_transliterations.append({
             'id': row_object_id,
-            'translation': getattr(row, 'translation'),
-            'translit': getattr(row, 'translit'),
+            'translation': translation,
+            'translit': translit,
             'language': cat_row['language'],
             # 'collection': cat_row['collection'],
             # 'genre': cat_row['genre'],
