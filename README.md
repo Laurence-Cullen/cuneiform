@@ -22,3 +22,7 @@ I am looking to build a powerful NMT system to shine a light on the vast piles o
 * Hit 12.38 BLEU for Sumerian -> English translation, woop woop!
 * Researched [word embeddings for use in machine translation](http://www.aclweb.org/anthology/N18-2084), looks to have promise, especially for low resource languages. Loads of good ideas about using multilingual embeddings and encoders to squeze the most out of the limited datasets
 * Found tools for [aligning word embeddings across languages](https://github.com/Babylonpartners/fastText_multilingual)
+* Built multilingual corpus and split out undetermined language corpus
+* Built sentence piece encodings from the entire Cuneiform transliterated dataset of 1.6 million lines
+* Tokenised monolingual Sumerian corpus with learnt sentence piece model
+* Built [GloVe embeddings](https://nlp.stanford.edu/projects/glove/) of tokenised Sumerian
