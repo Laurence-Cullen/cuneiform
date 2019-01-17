@@ -3,3 +3,4 @@ __pycache__
 .ipynb_checkpoints
 *.pickle
 cuneiform-translation-ab894fb04247.json
+.DS_Store
