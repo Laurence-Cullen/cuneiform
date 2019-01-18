@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
 # TODO fix up and generalise, maybe wrap in Python?
-spm_encode --model=sp_encodings/omni.model --output_format=piece monolingual_corpuses/sumerian.txt > tokenised_corpuses/sumerian.txt
+
+ENCODING_MODEL=sp_encodings/omni.model
+CORPUS=omni.txt
+
+spm_encode --model=${ENCODING_MODEL} --output_format=piece monolingual_corpuses/${CORPUS} > tokenised_corpuses/${CORPUS}

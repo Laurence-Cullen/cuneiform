@@ -4,9 +4,9 @@ set -e
 # Makes programs, downloads sample data, trains a GloVe model, and then evaluates it.
 # One optional argument can specify the language used for eval script: matlab, octave or [default] python
 
-
-UNCLEAN_CORPUS=tokenised_corpuses/sumerian.txt
-CORPUS=tokenised_corpuses/sumerian_cleaned.txt
+LANGUAGE=omni
+UNCLEAN_CORPUS=tokenised_corpuses/${LANGUAGE}.txt
+CORPUS=tokenised_corpuses/${LANGUAGE}_cleaned.txt
 VOCAB_FILE=vocab.txt
 COOCCURRENCE_FILE=cooccurrence.bin
 COOCCURRENCE_SHUF_FILE=cooccurrence.shuf.bin
@@ -16,7 +16,7 @@ SAVE_FILE=vectors
 VERBOSE=2
 MEMORY=6.0
 VOCAB_MIN_COUNT=0
-VECTOR_SIZE=100
+VECTOR_SIZE=30
 MAX_ITER=1000
 WINDOW_SIZE=15
 BINARY=2
