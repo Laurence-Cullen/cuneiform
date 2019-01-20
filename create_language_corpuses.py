@@ -1,5 +1,7 @@
+import os
 import pandas as pd
-import math
+
+
 
 monolingual_folder = 'monolingual_corpuses/'
 language_pairs_folder = 'language_pairs/'
@@ -29,14 +31,21 @@ def save_language_pairs(translation_pairs):
         tsv_file.write('translit\ttranslation\n')
 
         dead_translations = ['basket-of-tablets:', 'xxx', '(subscript)', ';', '']
+        dead_transliterations = ['']
+
+        pair_set = set()
 
         for row in corpus.itertuples():
             if isinstance(getattr(row, 'translation'), str):
                 translation = str(getattr(row, 'translation')).replace('\t', '')
-                transliteration = getattr(row, 'translit').replace('\t', '')
+                transliteration = str(getattr(row, 'translit')).replace('\t', '')
 
-                if translation in dead_translations:
+                pair = (transliteration, translation)
+
+                if translation in dead_translations or transliteration in dead_transliterations or pair in pair_set:
                     continue
+
+                pair_set.add(pair)
 
                 translit_file.write(transliteration + '\n')
                 translated_file.write(translation + '\n')
