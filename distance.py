@@ -1,12 +1,13 @@
 import argparse
 import numpy as np
 import sys
+import contextlib
 
 
 def generate():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vocab_file', default='vocab.txt', type=str)
-    parser.add_argument('--vectors_file', default='vectors.txt', type=str)
+    parser.add_argument('--vectors_file', default='embeddings/fasttext_sumerian.vec', type=str)
     args = parser.parse_args()
 
     with open(args.vocab_file, 'r') as f:
@@ -25,9 +26,10 @@ def generate():
     vector_dim = len(vectors[ivocab[0]])
     W = np.zeros((vocab_size, vector_dim))
     for word, v in vectors.items():
-        if word == '<unk>':
-            continue
-        W[vocab[word], :] = v
+        # if word == '<unk>' or word == '</s>':
+        #     continue
+        with contextlib.suppress(KeyError):
+            W[vocab[word], :] = v
 
     # normalize each word vector to unit variance
     W_norm = np.zeros(W.shape)
