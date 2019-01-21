@@ -26,3 +26,8 @@ I am looking to build a powerful NMT system to shine a light on the vast piles o
 * Built sentence piece encodings from the entire Cuneiform transliterated dataset of 1.6 million lines
 * Tokenised monolingual Sumerian corpus with learnt sentence piece model
 * Built [GloVe embeddings](https://nlp.stanford.edu/projects/glove/) of tokenised Sumerian
+* Added distance.py script for exploring word embeddings, enter a word and the 100 words with the highest cosine similarity will be displayed
+* Built high performance FastText embeddings for Sumerian after some experimentation with training hyper parameters
+* Started work on seq2seq model, built infrastructure to convert language pair corpuses to tokenised arrays
+* Currently debugging sequence model architecture
+

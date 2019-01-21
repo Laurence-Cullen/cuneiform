@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import sentencepiece
 from keras.layers import Input, Embedding, Dense, LSTM, Flatten
-import tensorflow
 
 
 def sentences_to_indices(sentence_array, sp_encoder, max_len):
@@ -137,10 +136,13 @@ def main():
 
     # Note that `decoder_target_data` needs to be one-hot encoded,
     # rather than sequences of integers like `decoder_input_data`!
-    model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-              batch_size=batch_size,
-              epochs=epochs,
-              validation_split=0.2)
+    model.fit(
+        [encoder_input_data, decoder_input_data],
+        decoder_target_data,
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_split=0.2
+    )
 
 
 if __name__ == '__main__':
