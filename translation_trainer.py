@@ -2,7 +2,8 @@ import keras
 import numpy as np
 import pandas as pd
 import sentencepiece
-from keras.layers import Input, Embedding, Dense, LSTM, Flatten
+from keras.layers import Input, Embedding, Dense, LSTM  # , Flatten
+from keras.utils import to_categorical
 
 
 def sentences_to_indices(sentence_array, sp_encoder, max_len):
@@ -111,7 +112,11 @@ def main():
     for t in range(max_engish_sentence_length - 1):
         decoder_target_data[:, t] = decoder_input_data[:, t + 1]
 
-    print(len(cuneiform_embeddings['a']))
+    print(decoder_target_data.shape)
+
+    decoder_target_data = to_categorical(decoder_target_data, num_classes=english_vocab_size)
+
+    print(decoder_target_data.shape)
 
     # Define an input sequence and process it.
     encoder_inputs = Input(shape=(None,))
@@ -122,7 +127,7 @@ def main():
     # Set up the decoder, using `encoder_states` as initial state.
     decoder_inputs = Input(shape=(None,))
     x = Embedding(english_vocab_size, english_embedding_dims)(decoder_inputs)
-    x, _, _ = LSTM(lstm_units, return_sequences=True)(x, initial_state=encoder_states)
+    x = LSTM(lstm_units, return_sequences=True)(x, initial_state=encoder_states)
     decoder_outputs = Dense(english_vocab_size, activation='softmax')(x)
 
     # Define the model that will turn
@@ -132,7 +137,7 @@ def main():
     # Compile & run training
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
 
-    print(model.output_shape)
+    print(model.summary())
 
     # Note that `decoder_target_data` needs to be one-hot encoded,
     # rather than sequences of integers like `decoder_input_data`!
