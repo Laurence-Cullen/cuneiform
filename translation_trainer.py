@@ -69,13 +69,14 @@ def build_word_index(vocab):
     word_index = {}
 
     for row in vocab.itertuples():
-        word_index[getattr(0, row)] = getattr('Index', row)
+        print(row)
+        word_index[getattr(row, '_1')] = getattr(row, 'Index')
 
     return word_index
 
 
 def build_embedding_matrix(embeddings_index, dimensions, word_index):
-    embedding_matrix = np.zeros((len(word_index) + 1, dimensions))
+    embedding_matrix = np.zeros((len(word_index), dimensions))
     for word, i in word_index.items():
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
@@ -105,8 +106,6 @@ def main():
     print(cuneiform_vocab)
 
     cuneiform_vocab_size = len(cuneiform_vocab)
-
-
 
     cuneiform_embeddings_index = load_embedding_index('embeddings/0.11_loss_sumerian.vec')
     cuneiform_embedding_dims = len(cuneiform_embeddings_index['a'])
@@ -150,7 +149,13 @@ def main():
 
     # Define an input sequence and process it.
     encoder_inputs = Input(shape=(None,))
-    x = Embedding(cuneiform_vocab_size, cuneiform_embedding_dims)(encoder_inputs)
+    x = Embedding(
+        cuneiform_vocab_size,
+        cuneiform_embedding_dims,
+        weights=[cuneiform_embedding_matrix],
+        trainable=False
+    )(encoder_inputs)
+
     x, state_h, state_c = LSTM(lstm_units, return_state=True)(x)
     encoder_states = [state_h, state_c]
 
