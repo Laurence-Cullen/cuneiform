@@ -2,8 +2,7 @@ import keras
 import numpy as np
 import pandas as pd
 import sentencepiece
-from keras.layers import Input, Embedding, Dense, LSTM  # , Flatten
-from keras.utils import to_categorical
+from keras.layers import Input, Embedding, Dense, LSTM
 
 
 def sentences_to_indices(sentence_array, sp_encoder, max_len):
@@ -51,7 +50,7 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len):
     return encoded_sentences
 
 
-def load_embeddings(embedding_path):
+def load_embedding_index(embedding_path):
     embeddings_index = {}
 
     with open(embedding_path, mode='r') as file:
@@ -64,6 +63,27 @@ def load_embeddings(embedding_path):
     print('Found %s word vectors.' % len(embeddings_index))
 
     return embeddings_index
+
+
+def build_word_index(vocab):
+    word_index = {}
+
+    for row in vocab.itertuples():
+        print(row)
+        word_index[getattr(row, '_1')] = getattr(row, 'Index')
+
+    return word_index
+
+
+def build_embedding_matrix(embeddings_index, dimensions, word_index):
+    embedding_matrix = np.zeros((len(word_index), dimensions))
+    for word, i in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
+            embedding_matrix[i] = embedding_vector
+
+    return embedding_matrix
 
 
 def main():
@@ -81,13 +101,24 @@ def main():
 
     cuneiform_sp = sentencepiece.SentencePieceProcessor()
     cuneiform_sp.load('sp_encodings/omni.model')
-    cuneiform_vocab_size = len(pd.read_csv('sp_encodings/omni.vocab', sep='\t', header=None))
+    cuneiform_vocab = pd.read_csv('sp_encodings/omni.vocab', sep='\t', header=None)
+    cuneiform_word_index = build_word_index(cuneiform_vocab)
+    print(cuneiform_vocab)
 
-    cuneiform_embeddings = load_embeddings('embeddings/0.11_loss_sumerian.vec')
+    cuneiform_vocab_size = len(cuneiform_vocab)
+
+    cuneiform_embeddings_index = load_embedding_index('embeddings/0.11_loss_sumerian.vec')
+    cuneiform_embedding_dims = len(cuneiform_embeddings_index['a'])
+
+    cuneiform_embedding_matrix = build_embedding_matrix(
+        embeddings_index=cuneiform_embeddings_index,
+        dimensions=cuneiform_embedding_dims,
+        word_index=cuneiform_word_index
+    )
 
     sentence_pairs = pd.read_csv('language_pairs/' + language + '.tsv', sep='\t')
 
-    cuneiform_embedding_dims = len(cuneiform_embeddings['a'])
+    number_sentence_pairs = len(sentence_pairs)
     english_embedding_dims = 100
     max_cuneiform_sentence_length = 200
     max_engish_sentence_length = 200
@@ -107,27 +138,34 @@ def main():
         max_len=max_engish_sentence_length
     )
 
-    decoder_target_data = np.zeros_like(decoder_input_data, dtype=int)
+    decoder_target_data = np.zeros_like(decoder_input_data, dtype=float)
 
     for t in range(max_engish_sentence_length - 1):
         decoder_target_data[:, t] = decoder_input_data[:, t + 1]
 
     print(decoder_target_data.shape)
-
-    decoder_target_data = to_categorical(decoder_target_data, num_classes=english_vocab_size)
-
+    decoder_target_data = decoder_target_data.reshape((number_sentence_pairs, max_engish_sentence_length, 1))
     print(decoder_target_data.shape)
 
     # Define an input sequence and process it.
     encoder_inputs = Input(shape=(None,))
-    x = Embedding(cuneiform_vocab_size, cuneiform_embedding_dims)(encoder_inputs)
+    x = Embedding(
+        cuneiform_vocab_size,
+        cuneiform_embedding_dims,
+        weights=[cuneiform_embedding_matrix],
+        trainable=False
+    )(encoder_inputs)
+
     x, state_h, state_c = LSTM(lstm_units, return_state=True)(x)
     encoder_states = [state_h, state_c]
 
     # Set up the decoder, using `encoder_states` as initial state.
     decoder_inputs = Input(shape=(None,))
     x = Embedding(english_vocab_size, english_embedding_dims)(decoder_inputs)
-    x = LSTM(lstm_units, return_sequences=True)(x, initial_state=encoder_states)
+    x = LSTM(lstm_units,
+             input_shape=(None, max_engish_sentence_length),
+             return_sequences=True)(x, initial_state=encoder_states)
+
     decoder_outputs = Dense(english_vocab_size, activation='softmax')(x)
 
     # Define the model that will turn
@@ -135,7 +173,7 @@ def main():
     model = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
     # Compile & run training
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 
     print(model.summary())
 

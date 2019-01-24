@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-# Makes programs, downloads sample data, trains a GloVe model, and then evaluates it.
+# Makes programs, downloads sample CDLI_data, trains a GloVe model, and then evaluates it.
 # One optional argument can specify the language used for eval script: matlab, octave or [default] python
 
 LANGUAGE=omni
-UNCLEAN_CORPUS=tokenised_corpuses/${LANGUAGE}.txt
-CORPUS=tokenised_corpuses/${LANGUAGE}_cleaned.txt
+UNCLEAN_CORPUS=../tokenised_corpuses/${LANGUAGE}.txt
+CORPUS=../tokenised_corpuses/${LANGUAGE}_cleaned.txt
 VOCAB_FILE=vocab.txt
 COOCCURRENCE_FILE=cooccurrence.bin
 COOCCURRENCE_SHUF_FILE=cooccurrence.shuf.bin
@@ -34,7 +34,3 @@ echo "$ $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE
 $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
 echo "$ $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE"
 $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
-#if [[ "$CORPUS" = 'text8' ]]; then
-#   echo "$ python eval/python/evaluate.py"
-#   python ${INSTALL_PATH}/eval/python/evaluate.py
-#fi
