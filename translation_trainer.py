@@ -107,16 +107,15 @@ def main():
         max_len=max_engish_sentence_length
     )
 
-    decoder_target_data = np.zeros_like(decoder_input_data, dtype=int)
+    decoder_target_data = np.zeros_like(decoder_input_data, dtype=bool)
 
     for t in range(max_engish_sentence_length - 1):
         decoder_target_data[:, t] = decoder_input_data[:, t + 1]
 
     print(decoder_target_data.shape)
 
-    decoder_target_data = to_categorical(decoder_target_data, num_classes=english_vocab_size)
-
-    print(decoder_target_data.shape)
+    # decoder_target_data = to_categorical(decoder_target_data, num_classes=english_vocab_size)
+    # print(decoder_target_data.shape)
 
     # Define an input sequence and process it.
     encoder_inputs = Input(shape=(None,))
@@ -127,8 +126,8 @@ def main():
     # Set up the decoder, using `encoder_states` as initial state.
     decoder_inputs = Input(shape=(None,))
     x = Embedding(english_vocab_size, english_embedding_dims)(decoder_inputs)
-    x = LSTM(lstm_units, return_sequences=True)(x, initial_state=encoder_states)
-    decoder_outputs = Dense(english_vocab_size, activation='softmax')(x)
+    x = LSTM(lstm_units, input_shape=(None, max_engish_sentence_length))(x, initial_state=encoder_states)
+    decoder_outputs = Dense(max_engish_sentence_length, activation='softmax')(x)
 
     # Define the model that will turn
     # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
