@@ -55,7 +55,7 @@ def parse_atf_file(path):
 
             # search for transliteration lines, if found strip everything other
             # than the transliteration itself and add the transliteration to
-            # respective data frame
+            # respective CDLI_data frame
             if re.match(translit_line_regex, line):
                 line_start = re.search(translit_line_regex, line).group()
                 translit = line.lstrip(line_start)
@@ -137,6 +137,6 @@ def annotate_with_catalogue_data(catalogue, transliterations):
             # 'provenience': cat_row['provenience']
         })
 
-    print('finished annotating with catalogue data')
+    print('finished annotating with catalogue CDLI_data')
 
     return pd.DataFrame(annotated_transliterations)

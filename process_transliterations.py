@@ -7,8 +7,8 @@ strip_non_alphanum_regex = r'[^a-zA-Z0-9\ ]'
 
 
 def main():
-    catalogue = pd.read_csv('data/cdli_catalogue.csv', error_bad_lines=False)
-    transliterations, translations = atf_parser.parse_atf_file('data/cdliatf_unblocked.atf')
+    catalogue = pd.read_csv('CDLI_data/cdli_catalogue.csv', error_bad_lines=False)
+    transliterations, translations = atf_parser.parse_atf_file('CDLI_data/cdliatf_unblocked.atf')
 
     transliterations = atf_parser.annotate_with_catalogue_data(catalogue, transliterations)
 
