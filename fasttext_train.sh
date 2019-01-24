@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LANGUAGE=sumerian
+LANGUAGE=akkadian
 
 ../../fastText-0.2.0/fasttext skipgram \
  -input tokenised_corpuses/${LANGUAGE}.txt \
@@ -8,7 +8,7 @@ LANGUAGE=sumerian
   -minCount 0 \
   -minn 2 \
   -wordNgrams 6 \
-  -epoch 3000 \
+  -epoch 30000 \
   -dim 100 \
   -lr 0.2 \
   -neg 5
