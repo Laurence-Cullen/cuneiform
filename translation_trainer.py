@@ -5,7 +5,7 @@ import sentencepiece
 from keras.layers import Input, Embedding, Dense, LSTM
 
 
-def sentences_to_indices(sentence_array, sp_encoder, max_len):
+def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=False):
     """
     Converts an array of sentences (strings) into an array of indices corresponding to words in the sentences.
     The output shape should be such that it can be given to `Embedding()` (described in Figure 4).
@@ -21,8 +21,11 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len):
 
     m = sentence_array.shape[0]  # number of training examples
 
+    start_index = 1
+    end_index = 2
+
     # Initialize encoded_sentences as a numpy matrix of zeros and the correct shape (≈ 1 line)
-    encoded_sentences = np.zeros((m, max_len), dtype=int)
+    encoded_sentences = np.ones((m, max_len), dtype=int) * end_index
 
     for i in range(m):  # loop over training examples
         word_ids = None
@@ -36,10 +39,11 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len):
         # Initialize j to 0
         j = 0
 
+        if add_start_frag:
+            word_ids = [start_index] + word_ids
+
         # Loop over the words of sentence_words
         for word_id in word_ids:
-            # if len(word_id) == 0:
-            #     continue
 
             # Set the (i,j)th entry of encoded_sentences to the index of the correct word.
             encoded_sentences[i, j] = int(word_id)
@@ -90,9 +94,9 @@ def main():
     language = 'sumerian'
 
     english_sp = sentencepiece.SentencePieceProcessor()
-    english_sp.load('sp_encodings/en.wiki.bpe.vs25000.model')
+    english_sp.load('sp_encodings/en.wiki.bpe.vs5000.model')
     english_vocab_size = len(pd.read_csv(
-        'sp_encodings/en.wiki.bpe.vs25000.vocab',
+        'sp_encodings/en.wiki.bpe.vs5000.vocab',
         sep='\t',
         header=None,
         engine='python',
@@ -135,13 +139,16 @@ def main():
     decoder_input_data = sentences_to_indices(
         sentence_array=sentence_pairs['translation'].values,
         sp_encoder=english_sp,
-        max_len=max_engish_sentence_length
+        max_len=max_engish_sentence_length,
+        add_start_frag=True
     )
 
     decoder_target_data = np.zeros_like(decoder_input_data, dtype=float)
 
     for t in range(max_engish_sentence_length - 1):
         decoder_target_data[:, t] = decoder_input_data[:, t + 1]
+
+    # TODO add </s> fragment ID at end of decoder_target_data sentences
 
     print(decoder_target_data.shape)
     decoder_target_data = decoder_target_data.reshape((number_sentence_pairs, max_engish_sentence_length, 1))
@@ -162,11 +169,15 @@ def main():
     # Set up the decoder, using `encoder_states` as initial state.
     decoder_inputs = Input(shape=(None,))
     x = Embedding(english_vocab_size, english_embedding_dims)(decoder_inputs)
-    x = LSTM(lstm_units,
-             input_shape=(None, max_engish_sentence_length),
-             return_sequences=True)(x, initial_state=encoder_states)
+    decoder_lstm = LSTM(
+        lstm_units,
+        input_shape=(None, max_engish_sentence_length),
+        return_sequences=True
+    )(x, initial_state=encoder_states)
 
-    decoder_outputs = Dense(english_vocab_size, activation='softmax')(x)
+    decoder_dense = Dense(english_vocab_size, activation='softmax')
+
+    decoder_outputs = decoder_dense(decoder_lstm)
 
     # Define the model that will turn
     # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
@@ -186,6 +197,75 @@ def main():
         epochs=epochs,
         validation_split=0.2
     )
+
+    model.save('first_model.model')
+
+    # Performing inference
+
+    encoder_model = keras.Model(encoder_inputs, encoder_states)
+
+    decoder_state_input_h = Input(shape=(lstm_units,))
+    decoder_state_input_c = Input(shape=(lstm_units,))
+
+    decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+
+    decoder_outputs, state_h, state_c = decoder_lstm(
+        decoder_inputs,
+        initial_state=decoder_states_inputs
+    )
+
+    decoder_states = [state_h, state_c]
+    decoder_outputs = decoder_dense(decoder_outputs)
+
+    decoder_model = keras.Model(
+        [decoder_inputs] + decoder_states_inputs,
+        [decoder_outputs] + decoder_states
+    )
+
+    def decode_sequence(input_seq):
+        # TODO preprocess input into set length array of word fragment IDs
+
+        # Encode the input as state vectors.
+        states_value = encoder_model.predict(input_seq)
+
+        # Generate empty target sequence of length 1.
+        target_seq = np.zeros((1, 1))
+        # Populate the first fragment of target sequence with the start character.
+        target_seq[0, 0] = cuneiform_sp.EncodeAsIds('<s>')[0]
+
+        # Sampling loop for a batch of sequences
+        # (to simplify, here we assume a batch of size 1).
+        stop_condition = False
+        decoded_sentence = ''
+        while not stop_condition:
+            output_tokens, h, c = decoder_model.predict(
+                [target_seq] + states_value)
+
+            # Sample a token
+            sampled_token_index = np.argmax(output_tokens[0, -1, :])
+            sampled_fragment = english_sp.DecodeIds([sampled_token_index])
+            decoded_sentence += sampled_fragment
+
+            # Exit condition: either hit max length
+            # or find stop character.
+            if (sampled_fragment == '</s>' or
+                    len(decoded_sentence) > max_engish_sentence_length):
+
+                stop_condition = True
+
+            # Update the target sequence (of length 1).
+            target_seq = np.zeros((1, 1))
+            target_seq[0, 0] = sampled_token_index
+
+            # Update states
+            states_value = [h, c]
+
+        return decoded_sentence
+
+    while True:
+        sumerian_sentence = input('Enter Sumerian string to translate:')
+        english_sentence = decode_sequence(sumerian_sentence)
+        print(english_sentence)
 
 
 if __name__ == '__main__':
