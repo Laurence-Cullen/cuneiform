@@ -1,11 +1,14 @@
+import contextlib
+
 import keras
 import numpy as np
 import pandas as pd
 import sentencepiece
-from keras.layers import Input, Embedding, Dense, LSTM
+from keras import optimizers
+from keras.layers import Input, Embedding, Dense, LSTM, Dropout, Bidirectional, BatchNormalization
 
 
-def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=False):
+def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=False, add_end_frag=False):
     """
     Converts an array of sentences (strings) into an array of indices corresponding to words in the sentences.
     The output shape should be such that it can be given to `Embedding()` (described in Figure 4).
@@ -36,20 +39,17 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=Fal
         except TypeError:
             ValueError('failed to encode transliteration at line', i + 1)
 
-        # Initialize j to 0
-        j = 0
-
         if add_start_frag:
             word_ids = [start_index] + word_ids
 
-        # Loop over the words of sentence_words
-        for word_id in word_ids:
+        if add_end_frag:
+            word_ids = word_ids + [end_index]
 
-            # Set the (i,j)th entry of encoded_sentences to the index of the correct word.
-            encoded_sentences[i, j] = int(word_id)
-
-            # Increment j to j + 1
-            j += 1
+        with contextlib.suppress(IndexError):
+            # Loop over the words of sentence_words
+            for j, word_id in enumerate(word_ids):
+                # Set the (i,j)th entry of encoded_sentences to the index of the correct word.
+                encoded_sentences[i, j] = int(word_id)
 
     return encoded_sentences
 
@@ -64,7 +64,7 @@ def load_embedding_index(embedding_path):
             coefs = np.asarray(values[1:], dtype='float32')
             embeddings_index[word] = coefs
 
-    print('Found %s word vectors.' % len(embeddings_index))
+    # print('Found %s word vectors.' % len(embeddings_index))
 
     return embeddings_index
 
@@ -73,7 +73,7 @@ def build_word_index(vocab):
     word_index = {}
 
     for row in vocab.itertuples():
-        print(row)
+        # print(row)
         word_index[getattr(row, '_1')] = getattr(row, 'Index')
 
     return word_index
@@ -107,7 +107,7 @@ def main():
     cuneiform_sp.load('sp_encodings/omni.model')
     cuneiform_vocab = pd.read_csv('sp_encodings/omni.vocab', sep='\t', header=None)
     cuneiform_word_index = build_word_index(cuneiform_vocab)
-    print(cuneiform_vocab)
+    # print(cuneiform_vocab)
 
     cuneiform_vocab_size = len(cuneiform_vocab)
 
@@ -124,11 +124,13 @@ def main():
 
     number_sentence_pairs = len(sentence_pairs)
     english_embedding_dims = 100
-    max_cuneiform_sentence_length = 200
-    max_engish_sentence_length = 200
-    lstm_units = 128
-    batch_size = 64
-    epochs = 10
+    max_cuneiform_sentence_length = 50
+    max_engish_sentence_length = 50
+    lstm_units = 512
+    batch_size = 128
+    epochs = 20
+    dropout = 0.5
+    lr = 0.001
 
     encoder_input_data = sentences_to_indices(
         sentence_array=sentence_pairs['translit'].values,
@@ -140,7 +142,8 @@ def main():
         sentence_array=sentence_pairs['translation'].values,
         sp_encoder=english_sp,
         max_len=max_engish_sentence_length,
-        add_start_frag=True
+        add_start_frag=True,
+        add_end_frag=True
     )
 
     decoder_target_data = np.zeros_like(decoder_input_data, dtype=float)
@@ -148,11 +151,9 @@ def main():
     for t in range(max_engish_sentence_length - 1):
         decoder_target_data[:, t] = decoder_input_data[:, t + 1]
 
-    # TODO add </s> fragment ID at end of decoder_target_data sentences
-
-    print(decoder_target_data.shape)
+    # print(decoder_target_data.shape)
     decoder_target_data = decoder_target_data.reshape((number_sentence_pairs, max_engish_sentence_length, 1))
-    print(decoder_target_data.shape)
+    # print(decoder_target_data.shape)
 
     # Define an input sequence and process it.
     encoder_inputs = Input(shape=(None,))
@@ -160,33 +161,68 @@ def main():
         cuneiform_vocab_size,
         cuneiform_embedding_dims,
         weights=[cuneiform_embedding_matrix],
-        trainable=False
+        trainable=True
     )(encoder_inputs)
 
-    x, state_h, state_c = LSTM(lstm_units, return_state=True)(x)
+    x = BatchNormalization()(x)
+
+    encoder_mid_layer = Bidirectional(LSTM(
+        lstm_units,
+        return_sequences=True,
+        dropout=dropout,
+        recurrent_dropout=dropout
+    ))(x)
+
+    encoder_mid_layer = BatchNormalization()(encoder_mid_layer)
+
+    x, state_h, state_c = LSTM(
+        lstm_units,
+        return_state=True,
+        dropout=dropout,
+        recurrent_dropout=dropout
+    )(encoder_mid_layer)
+
     encoder_states = [state_h, state_c]
 
     # Set up the decoder, using `encoder_states` as initial state.
     decoder_inputs = Input(shape=(None,))
-    x = Embedding(english_vocab_size, english_embedding_dims)(decoder_inputs)
+    x = Embedding(english_vocab_size, english_embedding_dims, trainable=True)(decoder_inputs)
+
+    x = BatchNormalization()(x)
+
+    decoder_mid_layer = LSTM(
+        lstm_units,
+        return_sequences=True,
+        dropout=dropout,
+        recurrent_dropout=dropout
+    )(x, initial_state=encoder_states)
+
+    decoder_mid_layer = BatchNormalization()(decoder_mid_layer)
+
     decoder_lstm = LSTM(
         lstm_units,
         input_shape=(None, max_engish_sentence_length),
-        return_sequences=True
-    )(x, initial_state=encoder_states)
+        return_sequences=True,
+        dropout=dropout,
+        recurrent_dropout=dropout
+    )(decoder_mid_layer)
 
+    decoder_lstm = BatchNormalization()(decoder_lstm)
+
+    decoder_dropout = Dropout(dropout)(decoder_lstm)
     decoder_dense = Dense(english_vocab_size, activation='softmax')
-
-    decoder_outputs = decoder_dense(decoder_lstm)
+    decoder_outputs = decoder_dense(decoder_dropout)
 
     # Define the model that will turn
     # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
     model = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
-    # Compile & run training
-    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+    optimizer = optimizers.Adam(lr=lr)
 
-    print(model.summary())
+    # Compile & run training
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    # print(model.summary())
 
     # Note that `decoder_target_data` needs to be one-hot encoded,
     # rather than sequences of integers like `decoder_input_data`!
@@ -250,7 +286,6 @@ def main():
             # or find stop character.
             if (sampled_fragment == '</s>' or
                     len(decoded_sentence) > max_engish_sentence_length):
-
                 stop_condition = True
 
             # Update the target sequence (of length 1).
