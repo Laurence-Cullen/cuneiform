@@ -7,7 +7,7 @@ import contextlib
 def generate():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vocab_file', default='vocab.txt', type=str)
-    parser.add_argument('--vectors_file', default='embeddings/fasttext_sumerian.vec', type=str)
+    parser.add_argument('--vectors_file', default='embeddings/0.11_loss_sumerian.vec', type=str)
     args = parser.parse_args()
 
     with open(args.vocab_file, 'r') as f:
@@ -69,7 +69,7 @@ def distance(W, vocab, ivocab, input_term, N):
 
 
 def main():
-    N = 100  # number of closest words that will be shown
+    N = 15  # number of closest words that will be shown
     W, vocab, ivocab = generate()
     while True:
         input_term = input("\nEnter word or sentence (EXIT to break): ")

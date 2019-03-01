@@ -6,9 +6,10 @@ import pandas as pd
 import sentencepiece
 from keras import optimizers
 from keras.layers import Input, Embedding, Dense, LSTM, Dropout, Bidirectional, BatchNormalization
+import matplotlib.pyplot as plt
 
 
-def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=False, add_end_frag=False):
+def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=False, add_end_frag=False, language=None):
     """
     Converts an array of sentences (strings) into an array of indices corresponding to words in the sentences.
     The output shape should be such that it can be given to `Embedding()` (described in Figure 4).
@@ -30,12 +31,16 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=Fal
     # Initialize encoded_sentences as a numpy matrix of zeros and the correct shape (≈ 1 line)
     encoded_sentences = np.ones((m, max_len), dtype=int) * end_index
 
+    sentence_lengths = []
+
     for i in range(m):  # loop over training examples
         word_ids = None
 
         try:
             # Convert sentence into a list of IDs corresponding to character fragments
             word_ids = sp_encoder.EncodeAsIds(sentence_array[i])
+
+            sentence_lengths.append(len(word_ids))
         except TypeError:
             ValueError('failed to encode transliteration at line', i + 1)
 
@@ -50,6 +55,10 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=Fal
             for j, word_id in enumerate(word_ids):
                 # Set the (i,j)th entry of encoded_sentences to the index of the correct word.
                 encoded_sentences[i, j] = int(word_id)
+
+    plt.hist(sentence_lengths, bins=100, cumulative=True, density=True)
+    plt.title(language)
+    plt.show()
 
     return encoded_sentences
 
@@ -107,7 +116,6 @@ def main():
     cuneiform_sp.load('sp_encodings/omni.model')
     cuneiform_vocab = pd.read_csv('sp_encodings/omni.vocab', sep='\t', header=None)
     cuneiform_word_index = build_word_index(cuneiform_vocab)
-    # print(cuneiform_vocab)
 
     cuneiform_vocab_size = len(cuneiform_vocab)
 
@@ -124,8 +132,8 @@ def main():
 
     number_sentence_pairs = len(sentence_pairs)
     english_embedding_dims = 100
-    max_cuneiform_sentence_length = 50
-    max_engish_sentence_length = 50
+    max_cuneiform_sentence_length = 30
+    max_engish_sentence_length = 35
     lstm_units = 512
     batch_size = 128
     epochs = 20
@@ -135,7 +143,8 @@ def main():
     encoder_input_data = sentences_to_indices(
         sentence_array=sentence_pairs['translit'].values,
         sp_encoder=cuneiform_sp,
-        max_len=max_cuneiform_sentence_length
+        max_len=max_cuneiform_sentence_length,
+        language='Sumerian'
     )
 
     decoder_input_data = sentences_to_indices(
@@ -143,7 +152,8 @@ def main():
         sp_encoder=english_sp,
         max_len=max_engish_sentence_length,
         add_start_frag=True,
-        add_end_frag=True
+        add_end_frag=True,
+        language='English'
     )
 
     decoder_target_data = np.zeros_like(decoder_input_data, dtype=float)
