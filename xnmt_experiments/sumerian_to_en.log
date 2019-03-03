@@ -1,0 +1,77 @@
+running XNMT revision a87e7b9 on Cortes on 2019-03-03 19:03:59
+initialized exp_global.param_init: GlorotInitializer@140706537892832({})
+initialized exp_global.bias_init: ZeroInitializer@140706537892160({})
+initialized exp_global: ExpGlobal@140706537892776({'model_file': 'sumerian_to_en.mod', 'log_file': 'sumerian_to_en.log', 'dropout': 0.3, 'weight_noise': 0.0, 'default_layer_dim': 512, 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464, 'truncate_dec_batches': False, 'loss_comb_method': 'sum', 'commandline_args': {'dynet_mem': None, 'dynet_seed': None, 'dynet_autobatch': None, 'dynet_devices': None, 'dynet_viz': False, 'dynet_gpu': True, 'dynet_gpu_ids': None, 'dynet_gpus': None, 'dynet_weight_decay': None, 'dynet_profiling': None, 'settings': 'standard', 'resume': False, 'experiments_file': 'xnmt_experiment.yaml', 'experiment_name': [], 'generate_doc': False}})
+initialized model.src_reader.vocab: Vocab@140706537893280({'vocab_file': '../sp_encodings/sumerian.vocab'})
+initialized model.src_reader: PlainTextReader@140706537893560({'vocab': Vocab@140706538148920})
+initialized model.trg_reader.vocab: Vocab@140706537893336({'vocab_file': '../sp_encodings/en.wiki.bpe.vs5000.vocab'})
+initialized model.trg_reader: PlainTextReader@140706537889864({'vocab': Vocab@140706538149312})
+for model.src_embedder.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.src_embedder.src_reader: reusing previously initialized PlainTextReader@140706538149032
+for model.src_embedder.trg_reader: reusing previously initialized PlainTextReader@140706538148080
+initialized model.src_embedder: SimpleWordEmbedder@140706537980536({'emb_dim': 512, 'weight_noise': 0.0, 'param_init': GlorotInitializer@140706538005560, 'src_reader': PlainTextReader@140706538149032, 'trg_reader': PlainTextReader@140706538148080, 'yaml_path': model.src_embedder})
+for model.encoder.weightnoise_std: reusing previously initialized 0.0
+for model.encoder.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.encoder.bias_init: reusing previously initialized ZeroInitializer@140706538007464
+initialized model.encoder: BiLSTMSeqTransducer@140706537980368({'layers': 1, 'input_dim': 512, 'hidden_dim': 512, 'dropout': 0.3, 'weightnoise_std': 0.0, 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464})
+for model.attender.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.attender.bias_init: reusing previously initialized ZeroInitializer@140706538007464
+initialized model.attender: MlpAttender@140706537980592({'input_dim': 512, 'state_dim': 512, 'hidden_dim': 512, 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464, 'truncate_dec_batches': False})
+for model.decoder.embedder.weight_noise: reusing previously initialized 0.0
+for model.decoder.embedder.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.decoder.embedder.src_reader: reusing previously initialized PlainTextReader@140706538149032
+for model.decoder.embedder.trg_reader: reusing previously initialized PlainTextReader@140706538148080
+initialized model.decoder.embedder: SimpleWordEmbedder@140706537980760({'emb_dim': 512, 'weight_noise': 0.0, 'param_init': GlorotInitializer@140706538005560, 'src_reader': PlainTextReader@140706538149032, 'trg_reader': PlainTextReader@140706538148080, 'yaml_path': model.decoder.embedder})
+initialized model.decoder.bridge: CopyBridge@140706537980312({'dec_layers': 1, 'dec_dim': 512})
+for model.decoder.rnn.dropout: reusing previously initialized 0.3
+for model.decoder.rnn.weightnoise_std: reusing previously initialized 0.0
+for model.decoder.rnn.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.decoder.rnn.bias_init: reusing previously initialized ZeroInitializer@140706538007464
+initialized model.decoder.rnn: UniLSTMSeqTransducer@140706537981040({'layers': 1, 'input_dim': 512, 'hidden_dim': 512, 'dropout': 0.3, 'weightnoise_std': 0.0, 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464, 'decoder_input_dim': 512, 'yaml_path': model.decoder.rnn})
+for model.decoder.transform.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.decoder.transform.bias_init: reusing previously initialized ZeroInitializer@140706538007464
+initialized model.decoder.transform: AuxNonLinear@140706537980984({'input_dim': 512, 'output_dim': 512, 'aux_input_dim': 512, 'activation': 'tanh', 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464})
+for model.decoder.scorer.trg_reader: reusing previously initialized PlainTextReader@140706538148080
+for model.decoder.scorer.param_init: reusing previously initialized GlorotInitializer@140706538005560
+for model.decoder.scorer.bias_init: reusing previously initialized ZeroInitializer@140706538007464
+initialized model.decoder.scorer: Softmax@140706537980928({'input_dim': 512, 'trg_reader': PlainTextReader@140706538148080, 'param_init': GlorotInitializer@140706538005560, 'bias_init': ZeroInitializer@140706538007464})
+for model.decoder.truncate_dec_batches: reusing previously initialized False
+initialized model.decoder: AutoRegressiveDecoder@140706537980480({'input_dim': 512, 'embedder': SimpleWordEmbedder@140706538005504, 'bridge': CopyBridge@140706537950736, 'rnn': UniLSTMSeqTransducer@140706538007016, 'transform': AuxNonLinear@140706538006176, 'scorer': Softmax@140706538008528, 'truncate_dec_batches': False})
+initialized model.inference.search_strategy.len_norm: NoNormalization@140706537981152({})
+initialized model.inference.search_strategy: BeamSearch@140706537980200({'beam_size': 5, 'len_norm': NoNormalization@140706537964264})
+initialized model.inference.batcher: InOrderBatcher@140706537981880({'batch_size': 1})
+initialized model.inference: AutoRegressiveInference@140706537981544({'search_strategy': BeamSearch@140706537980984, 'batcher': InOrderBatcher@140706537963760})
+initialized model: DefaultTranslator@140706537893616({'src_reader': PlainTextReader@140706538149032, 'trg_reader': PlainTextReader@140706538148080, 'src_embedder': SimpleWordEmbedder@140706537983896, 'encoder': BiLSTMSeqTransducer@140706537947936, 'attender': MlpAttender@140706537949952, 'decoder': AutoRegressiveDecoder@140706538008472, 'inference': AutoRegressiveInference@140706537980928})
+for train.model: reusing previously initialized DefaultTranslator@140706537965552
+initialized train.batcher: SrcBatcher@140706537982048({'batch_size': 32})
+initialized train.loss_calculator: MLELoss@140706537981600({})
+initialized train.trainer: AdamTrainer@140706537982384({'alpha': 0.001})
+for train.dev_tasks.0.model: reusing previously initialized DefaultTranslator@140706537965552
+for train.dev_tasks.0.batcher: reusing previously initialized SrcBatcher@140706537980816
+initialized train.dev_tasks.0.loss_calculator: MLELoss@140706537981432({})
+initialized train.dev_tasks.0: LossEvalTask@140706537982496({'src_file': '../language_pairs/sumerian.txt', 'ref_file': '../language_pairs/translated_sumerian.txt', 'model': DefaultTranslator@140706537965552, 'batcher': SrcBatcher@140706537980816, 'loss_calculator': MLELoss@140706537963648, 'loss_comb_method': 'sum'})
+for train.loss_comb_method: reusing previously initialized sum
+initialized train: SimpleTrainingRegimen@140706537981992({'model': DefaultTranslator@140706537965552, 'src_file': '../language_pairs/sumerian.txt', 'trg_file': '../language_pairs/translated_sumerian.txt', 'batcher': SrcBatcher@140706537980816, 'loss_calculator': MLELoss@140706537980536, 'trainer': AdamTrainer@140706537982720, 'run_for_epochs': 2, 'dev_tasks': [LossEvalTask@140706537965776], 'name': 'first_xnmt_sum_to_en', 'loss_comb_method': 'sum', 'commandline_args': {'dynet_mem': None, 'dynet_seed': None, 'dynet_autobatch': None, 'dynet_devices': None, 'dynet_viz': False, 'dynet_gpu': True, 'dynet_gpu_ids': None, 'dynet_gpus': None, 'dynet_weight_decay': None, 'dynet_profiling': None, 'settings': 'standard', 'resume': False, 'experiments_file': 'xnmt_experiment.yaml', 'experiment_name': [], 'generate_doc': False}})
+for evaluate.0.model: reusing previously initialized DefaultTranslator@140706537965552
+initialized evaluate.0: AccuracyEvalTask@140706537982664({'src_file': '../language_pairs/sumerian.txt', 'ref_file': '../language_pairs/translated_sumerian.txt', 'hyp_file': 'examples/output/first_xnmt_sum_to_en.test_hyp', 'model': DefaultTranslator@140706537965552, 'eval_metrics': 'bleu'})
+initialized : Experiment@140706538392656({'name': 'first_xnmt_sum_to_en', 'exp_global': ExpGlobal@140706537892160, 'model': DefaultTranslator@140706537965552, 'train': SimpleTrainingRegimen@140706601811248, 'evaluate': [AccuracyEvalTask@140706537983000]})
+> use randomly initialized DyNet weights of all components
+  DyNet param count: 13462411
+> Training
+Starting to read ../language_pairs/sumerian.txt and ../language_pairs/translated_sumerian.txt
+Done reading ../language_pairs/sumerian.txt and ../language_pairs/translated_sumerian.txt. Packing into batches.
+Done packing batches.
+The dy.parameter(...) call is now DEPRECATED.
+        There is no longer need to explicitly add parameters to the computation graph.
+        Any used parameter will be added automatically.
+[first_xnmt_sum_to_en] [first_xnmt_sum_to_en] Epoch 0.0698: train_loss/word=2.382601 (words=4831, words/sec=4795.82, time=0-00:00:02)
+[first_xnmt_sum_to_en] [first_xnmt_sum_to_en] Epoch 0.1395: train_loss/word=1.344907 (words=10360, words/sec=5302.65, time=0-00:00:03)
+[first_xnmt_sum_to_en] [first_xnmt_sum_to_en] Epoch 0.2093: train_loss/word=1.030083 (words=15769, words/sec=5074.67, time=0-00:00:04)
+[first_xnmt_sum_to_en] [first_xnmt_sum_to_en] Epoch 0.2791: train_loss/word=0.889201 (words=20856, words/sec=5064.32, time=0-00:00:05)
+[first_xnmt_sum_to_en] [first_xnmt_sum_to_en] Epoch 0.3488: train_loss/word=0.801936 (words=25901, words/sec=5073.03, time=0-00:00:06)
+ERROR: ERROR: ------ Error Report ------
+ERROR: ERROR: *** src ***
+ERROR: ERROR: ["<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>"]
+ERROR: ERROR: *** trg ***
+ERROR: ERROR: ["<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk> <unk>", "<unk> <unk> <unk>", "<unk>", "<unk>"]
+ERROR: ERROR: *** graph ***

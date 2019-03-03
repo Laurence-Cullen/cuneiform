@@ -57,10 +57,14 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=Fal
                 encoded_sentences[i, j] = int(word_id)
 
     plt.hist(sentence_lengths, bins=100, cumulative=True, density=True)
-    plt.title(language, 'sentence lengths')
+    plt.title(f'{language} token sentence length')
     plt.show()
 
-    
+    unique, counts = np.unique(encoded_sentences, return_counts=True)
+    end_tokens = dict(zip(unique, counts))[2]
+    end_token_fraction = end_tokens / (m * max_len)
+
+    print(f'{language} sentences are {end_token_fraction} end tokens')
 
     return encoded_sentences
 
@@ -137,9 +141,9 @@ def main():
     max_engish_sentence_length = 35
     lstm_units = 512
     batch_size = 128
-    epochs = 100
+    epochs = 1
     dropout = 0.5
-    lr = 0.0005
+    lr = 0.001
 
     encoder_input_data = sentences_to_indices(
         sentence_array=sentence_pairs['translit'].values,
@@ -216,11 +220,13 @@ def main():
         return_sequences=True,
         dropout=dropout,
         recurrent_dropout=dropout
-    )(decoder_mid_layer)
+    )
 
-    decoder_lstm = BatchNormalization()(decoder_lstm)
+    decoder_lstm_2 = decoder_lstm(decoder_mid_layer)
 
-    decoder_dropout = Dropout(dropout)(decoder_lstm)
+    decoder_lstm_bn = BatchNormalization()(decoder_lstm_2)
+
+    decoder_dropout = Dropout(dropout)(decoder_lstm_bn)
     decoder_dense = Dense(english_vocab_size, activation='softmax')
     decoder_outputs = decoder_dense(decoder_dropout)
 
@@ -248,26 +254,18 @@ def main():
     model.save('first_model.model')
 
     # Performing inference
-
     encoder_model = keras.Model(encoder_inputs, encoder_states)
 
     decoder_state_input_h = Input(shape=(lstm_units,))
     decoder_state_input_c = Input(shape=(lstm_units,))
-
     decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-
     decoder_outputs, state_h, state_c = decoder_lstm(
-        decoder_inputs,
-        initial_state=decoder_states_inputs
-    )
-
+        decoder_inputs, initial_state=decoder_states_inputs)
     decoder_states = [state_h, state_c]
     decoder_outputs = decoder_dense(decoder_outputs)
-
     decoder_model = keras.Model(
         [decoder_inputs] + decoder_states_inputs,
-        [decoder_outputs] + decoder_states
-    )
+        [decoder_outputs] + decoder_states)
 
     def decode_sequence(input_seq):
         # TODO preprocess input into set length array of word fragment IDs
