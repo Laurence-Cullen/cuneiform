@@ -57,8 +57,10 @@ def sentences_to_indices(sentence_array, sp_encoder, max_len, add_start_frag=Fal
                 encoded_sentences[i, j] = int(word_id)
 
     plt.hist(sentence_lengths, bins=100, cumulative=True, density=True)
-    plt.title(language)
+    plt.title(language, 'sentence lengths')
     plt.show()
+
+    
 
     return encoded_sentences
 
@@ -82,7 +84,6 @@ def build_word_index(vocab):
     word_index = {}
 
     for row in vocab.itertuples():
-        # print(row)
         word_index[getattr(row, '_1')] = getattr(row, 'Index')
 
     return word_index
@@ -136,9 +137,9 @@ def main():
     max_engish_sentence_length = 35
     lstm_units = 512
     batch_size = 128
-    epochs = 20
+    epochs = 100
     dropout = 0.5
-    lr = 0.001
+    lr = 0.0005
 
     encoder_input_data = sentences_to_indices(
         sentence_array=sentence_pairs['translit'].values,
