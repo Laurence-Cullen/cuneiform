@@ -66,7 +66,11 @@ def parse_atf_file(path):
 
                 for look_ahead in range(1, 20):
 
-                    next_line = lines[i + look_ahead]
+                    try:
+                        next_line = lines[i + look_ahead]
+                    except IndexError:
+                        print(f"index error: i={i}, look_ahead={look_ahead}")
+                        continue
 
                     # Look ahead from transliteration to see if an english translation for it exists
                     if re.match(translation_line_regex, next_line):

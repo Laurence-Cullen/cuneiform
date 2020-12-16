@@ -1,7 +1,4 @@
-import os
 import pandas as pd
-
-
 
 monolingual_folder = 'monolingual_corpuses/'
 language_pairs_folder = 'language_pairs/'
